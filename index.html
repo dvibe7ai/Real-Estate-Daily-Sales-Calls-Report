@@ -13,7 +13,6 @@
     color:white; font-size:30px; font-weight:700; text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
     border-bottom-left-radius:12px; border-bottom-right-radius:12px;
   }
-  h2 { text-align:center; color:#003366; margin:20px 0 10px 0; }
   form { background:white; padding:25px 20px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.1); max-width:700px; margin:20px auto; }
   label { display:block; margin-bottom:10px; font-weight:500; color:#333; }
   input, textarea { width:100%; padding:12px; margin-top:5px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; font-size:15px; transition:0.3s; }
@@ -29,6 +28,8 @@
   tr:nth-child(even){ background:#f7f9fc; }
   .removeBtn { background:#dc3545; color:white; padding:6px 12px; border-radius:6px; font-size:13px; }
   .removeBtn:hover { opacity:0.85; }
+  .submitBtn { background:#28a745; color:white; padding:6px 12px; border-radius:6px; font-size:13px; margin-right:5px; }
+  .submitBtn:hover { opacity:0.85; }
   .statusCell { font-size:18px; color:green; font-weight:bold; }
   footer { text-align:center; margin:30px 0; color:#666; font-size:14px; }
 </style>
@@ -69,20 +70,20 @@ let entries = [];
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
 
 function getCurrentLocation() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        () => resolve({ lat: '', lon: '' }) // optional if user denies
+        () => resolve({ lat:'', lon:'' }) // optional if user denies
       );
     } else {
-      resolve({ lat: '', lon: '' }); // optional fallback
+      resolve({ lat:'', lon:'' });
     }
   });
 }
@@ -92,6 +93,30 @@ function getCurrentDateTime() {
   return { date: now.toISOString().split('T')[0], time: now.toTimeString().split(' ')[0] };
 }
 
+function submitEntryToWebhook(entry, row) {
+  return fetch('https://n8n.srv1063334.hstgr.cloud/webhook-test/Real-Estate-Daily-Sales-Calls-Report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify([entry]), // single entry
+    mode: 'cors'
+  })
+  .then(res => {
+    if(res.ok) {
+      row.querySelector('.statusCell').innerHTML = '✅';
+      row.querySelector('.submitBtn').disabled = true;
+      row.querySelector('.removeBtn').disabled = true;
+    } else {
+      row.querySelector('.statusCell').innerHTML = '❌';
+      console.error('Webhook error:', res.statusText);
+    }
+  })
+  .catch(err => {
+    row.querySelector('.statusCell').innerHTML = '❌';
+    console.error('Fetch error:', err);
+  });
+}
+
+// Add entry
 document.getElementById('addEntry').addEventListener('click', async () => {
   const location = await getCurrentLocation();
   const form = document.getElementById('salesForm');
@@ -112,8 +137,17 @@ document.getElementById('addEntry').addEventListener('click', async () => {
     <td>${data.revenue}</td><td>${data.latitude}</td><td>${data.longitude}</td>
     <td>${data.date}</td><td>${data.time}</td><td>${data.id}</td>
     <td class="statusCell"></td>
-    <td><button type="button" class="removeBtn">Remove</button></td>`;
+    <td>
+      <button type="button" class="submitBtn">Submit</button>
+      <button type="button" class="removeBtn">Remove</button>
+    </td>`;
+
   tbody.appendChild(row);
+
+  row.querySelector('.submitBtn').addEventListener('click', () => {
+    submitEntryToWebhook(data, row);
+  });
+
   row.querySelector('.removeBtn').addEventListener('click', () => {
     tbody.removeChild(row);
     entries = entries.filter(e => e !== data);
@@ -123,45 +157,37 @@ document.getElementById('addEntry').addEventListener('click', async () => {
   form.querySelector('input[name="client_name"]').focus();
 });
 
+// Submit All
 document.getElementById('salesForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (entries.length === 0) {
-    alert('Please add at least one entry before submitting.');
-    return;
-  }
+  if(entries.length === 0) { alert('Add at least one entry before submitting.'); return; }
 
+  document.getElementById('submitAll').disabled = true;
   try {
-    document.getElementById('submitAll').disabled = true;
     const response = await fetch('https://n8n.srv1063334.hstgr.cloud/webhook-test/Real-Estate-Daily-Sales-Calls-Report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(entries),
       mode: 'cors'
     });
 
-    if (response.ok) {
+    if(response.ok){
       alert('✅ All entries submitted successfully!');
-      // mark all rows as submitted
       const rows = document.querySelectorAll('#entriesTable tbody tr');
       rows.forEach(row => {
         row.querySelector('.statusCell').innerHTML = '✅';
+        row.querySelector('.submitBtn').disabled = true;
         row.querySelector('.removeBtn').disabled = true;
       });
-
-      // optionally clear table and entries after 2 seconds
-      setTimeout(() => {
-        entries = [];
-        document.querySelector('#entriesTable tbody').innerHTML = '';
-        document.getElementById('salesForm').reset();
-      }, 2000);
+      setTimeout(() => { entries=[]; document.querySelector('#entriesTable tbody').innerHTML=''; }, 2000);
     } else {
       alert('❌ Submission failed. Please try again.');
       console.error(await response.text());
     }
-  } catch (err) {
-    alert('🚫 Error submitting entries: ' + err.message);
+  } catch(err){
+    alert('🚫 Error submitting entries: '+err.message);
   } finally {
-    setTimeout(() => { document.getElementById('submitAll').disabled = false; }, 3000);
+    setTimeout(()=>{document.getElementById('submitAll').disabled=false;},3000);
   }
 });
 </script>
