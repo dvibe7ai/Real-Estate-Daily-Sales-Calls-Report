@@ -34,7 +34,7 @@
 </head>
 <body>
 
-<header>Real Estate Daily Sales & Calls Report</header>
+<header>🏡 Real Estate Daily Sales & Calls Report</header>
 
 <form id="salesForm">
   <label>Client Name:<input type="text" name="client_name" placeholder="John Doe" required></label>
@@ -65,9 +65,31 @@
 
 <script>
 let entries = [];
-function generateUUID() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { const r = Math.random()*16|0, v = c=='x'?r:(r&0x3|0x8); return v.toString(16); }); }
-function getCurrentLocation() { return new Promise((resolve, reject) => { if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos => resolve({lat: pos.coords.latitude, lon: pos.coords.longitude}), err => reject(err)); } else { reject(new Error('Geolocation not supported')); } }); }
-function getCurrentDateTime() { const now = new Date(); return { date: now.toISOString().split('T')[0], time: now.toTimeString().split(' ')[0] }; }
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        err => reject(err)
+      );
+    } else {
+      reject(new Error('Geolocation not supported'));
+    }
+  });
+}
+
+function getCurrentDateTime() {
+  const now = new Date();
+  return { date: now.toISOString().split('T')[0], time: now.toTimeString().split(' ')[0] };
+}
 
 document.getElementById('addEntry').addEventListener('click', async () => {
   try {
@@ -84,30 +106,57 @@ document.getElementById('addEntry').addEventListener('click', async () => {
 
     const tbody = document.querySelector('#entriesTable tbody');
     const row = document.createElement('tr');
-    row.innerHTML = `<td>${data.client_name}</td><td>${data.client_contact_number}</td><td>${data.team_member}</td><td>${data.calls}</td><td>${data.meetings}</td><td>${data.leads_generated}</td><td>${data.sales_closed}</td><td>${data.revenue}</td><td>${data.latitude}</td><td>${data.longitude}</td><td>${data.date}</td><td>${data.time}</td><td>${data.id}</td><td><button type="button" class="removeBtn">Remove</button></td>`;
+    row.innerHTML = `
+      <td>${data.client_name}</td><td>${data.client_contact_number}</td><td>${data.team_member}</td>
+      <td>${data.calls}</td><td>${data.meetings}</td><td>${data.leads_generated}</td><td>${data.sales_closed}</td>
+      <td>${data.revenue}</td><td>${data.latitude}</td><td>${data.longitude}</td>
+      <td>${data.date}</td><td>${data.time}</td><td>${data.id}</td>
+      <td><button type="button" class="removeBtn">Remove</button></td>`;
     tbody.appendChild(row);
-    row.querySelector('.removeBtn').addEventListener('click', () => { tbody.removeChild(row); entries = entries.filter(e => e !== data); });
+    row.querySelector('.removeBtn').addEventListener('click', () => {
+      tbody.removeChild(row);
+      entries = entries.filter(e => e !== data);
+    });
 
     form.reset();
     form.querySelector('input[name="client_name"]').focus();
-  } catch(err){ alert('⚠️ GPS required. Could not capture: '+err.message); }
+  } catch (err) {
+    alert('⚠️ GPS required. Could not capture location: ' + err.message);
+  }
 });
 
-document.getElementById('salesForm').addEventListener('submit', async (e)=>{
+document.getElementById('salesForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(entries.length===0){ alert('Add at least one entry'); return; }
-  try{
-    const response = await fetch('
-https://n8n.srv1063334.hstgr.cloud/webhook/Real-Estate-Daily-Sales-Calls-Report', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entries)
+  if (entries.length === 0) {
+    alert('Please add at least one entry before submitting.');
+    return;
+  }
+
+  try {
+    document.getElementById('submitAll').disabled = true;
+    const response = await fetch('https://n8n.srv1063334.hstgr.cloud/webhook/real-estate-sales-entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entries)
     });
-    if(response.ok){ alert('✅ All entries submitted successfully!'); entries=[]; document.querySelector('#entriesTable tbody').innerHTML=''; document.getElementById('salesForm').reset(); }
-    else{ alert('❌ Submission failed.'); }
-  } catch(err){ alert('🚫 Error submitting entries: '+err.message); }
+
+    if (response.ok) {
+      alert('✅ All entries submitted successfully!');
+      entries = [];
+      document.querySelector('#entriesTable tbody').innerHTML = '';
+      document.getElementById('salesForm').reset();
+    } else {
+      alert('❌ Submission failed. Please try again.');
+    }
+  } catch (err) {
+    alert('🚫 Error submitting entries: ' + err.message);
+  } finally {
+    setTimeout(() => { document.getElementById('submitAll').disabled = false; }, 3000);
+  }
 });
 </script>
 
-<footer>© 2025 Real Estate CRM</footer>
+<footer>© 2025 Real Estate CRM | Powered by n8n Automation</footer>
 
 </body>
 </html>
