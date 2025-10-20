@@ -98,7 +98,7 @@ document.getElementById('salesForm').addEventListener('submit', async (e)=>{
   if(entries.length===0){ alert('Add at least one entry'); return; }
   try{
     const response = await fetch('
-https://n8n.srv1063334.hstgr.cloud/webhook-test/8202e3f8-8185-49ba-9d7c-a7ffd5fcc9ea', {
+https://n8n.srv1063334.hstgr.cloud/webhook/Real-Estate-Daily-Sales-Calls-Report', {
       method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entries)
     });
     if(response.ok){ alert('✅ All entries submitted successfully!'); entries=[]; document.querySelector('#entriesTable tbody').innerHTML=''; document.getElementById('salesForm').reset(); }
