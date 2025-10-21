@@ -187,7 +187,6 @@
   </div>
 
 <script>
-// Use the original URL for the webhook
 const WEBHOOK_URL = "https://n8n.srv1063334.hstgr.cloud/webhook-test/Real-Estate-Daily-Sales-Calls-Report"; 
 
 /* India states & cities (compact) */
@@ -270,18 +269,22 @@ function addRow(d){
   tr.querySelector('.removeBtn').addEventListener('click', ()=>{ tr.remove(); entries = entries.filter(x=>x.id!==d.id); });
 }
 
-/* submit all - Back to Fetch with CORS assumption */
+/* submit all - Optimized Fetch for CORS environment */
 document.getElementById('submitAll').addEventListener('click', async ()=>{
   if(entries.length===0){ alert('Please add at least one entry'); return; }
   try{
     const res = await fetch(WEBHOOK_URL, { 
         method:'POST', 
-        // This header is essential for sending JSON to the webhook
-        headers:{'Content-Type':'application/json'}, 
+        // Explicitly set the mode for cross-origin requests
+        mode: 'cors', 
+        // Tell the browser to not send cookies/auth headers with the request
+        credentials: 'omit', 
+        headers:{
+            'Content-Type':'application/json'
+        }, 
         body: JSON.stringify(entries) 
     });
     
-    // Check if the response was successful (HTTP status 200-299)
     if(res.ok){
       document.getElementById('successModal').style.display='flex';
       entries = [];
@@ -289,13 +292,12 @@ document.getElementById('submitAll').addEventListener('click', async ()=>{
       setTimeout(()=>{ document.getElementById('successModal').style.display='none'; }, 1800);
     } else {
       const txt = await res.text().catch(()=>null);
-      // Alert on a non-successful HTTP status
       alert('Submission failed. Server returned HTTP status: ' + res.status + '. Response: ' + (txt||res.statusText));
     }
   }catch(err){
-    // This block catches network errors (like the original CORS error).
-    // If this alert shows up, double-check that CORS is fully enabled on your n8n webhook.
-    alert('Error submitting data. Check your network connection and ensure CORS is enabled on the n8n webhook.');
+    // If this error persists, the n8n webhook's CORS setup is still the main issue.
+    console.error(err);
+    alert('Network Error (CORS issue likely). Please verify that the n8n webhook has CORS enabled and is set up to handle POST requests from your GitHub Pages domain.');
   }
 });
 
