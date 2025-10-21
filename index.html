@@ -275,9 +275,7 @@ document.getElementById('submitAll').addEventListener('click', async ()=>{
   try{
     const res = await fetch(WEBHOOK_URL, { 
         method:'POST', 
-        // Explicitly set the mode for cross-origin requests
         mode: 'cors', 
-        // Tell the browser to not send cookies/auth headers with the request
         credentials: 'omit', 
         headers:{
             'Content-Type':'application/json'
@@ -295,9 +293,8 @@ document.getElementById('submitAll').addEventListener('click', async ()=>{
       alert('Submission failed. Server returned HTTP status: ' + res.status + '. Response: ' + (txt||res.statusText));
     }
   }catch(err){
-    // If this error persists, the n8n webhook's CORS setup is still the main issue.
-    console.error(err);
-    alert('Network Error (CORS issue likely). Please verify that the n8n webhook has CORS enabled and is set up to handle POST requests from your GitHub Pages domain.');
+    console.error('Fetch Error:', err);
+    alert('Network Error! Please verify that the n8n webhook has CORS enabled and is set up correctly for POST requests from your domain.');
   }
 });
 
