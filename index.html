@@ -20,7 +20,8 @@
   header{background:url('assets/header.jpg') center/cover no-repeat, linear-gradient(180deg,#e8e8e8,#d8d8d8); height:82px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#1565C0; font-size:var(--title-size); border-bottom-left-radius:10px; border-bottom-right-radius:10px;}
   .card{max-width:1120px;margin:20px auto;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.08);padding:20px 22px;position:relative}
   .header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
-  .form-title{font-size:22px;color:var(--blue);font-weight:600}
+  /* Title color changed to black (#000) */
+  .form-title{font-size:22px;color:#000;font-weight:600} 
   .note{font-size:12px;color:#666;text-align:right;line-height:1.4;max-width:360px}
   /* Grid - landscape style */
   form.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 14px;align-items:end}
@@ -62,13 +63,11 @@
       <div class="header-row">
         <div>
           <div id="formTitle" class="form-title">Real Estate Daily Sales & Calls Report</div>
-          <div class="muted" style="font-size:13px;margin-top:6px">Font: Inter (fallbacks: Open Sans, Lato, Roboto). Titles 22-24px; labels 14-16px; inputs 12-14px; line-height 1.4–1.6. Minimal bolding for clarity.</div>
-        </div>
+          </div>
         <div class="note">* Required fields | Optional fields labeled | GPS (lat, lon) mandatory</div>
       </div>
 
       <form id="salesForm" class="grid" autocomplete="on" novalidate>
-        <!-- Row 1 -->
         <div class="col-3">
           <label class="field-label">Title <span class="muted">*</span></label>
           <select id="title" class="input" required>
@@ -88,7 +87,6 @@
           <input id="email" class="input" type="email" placeholder="client@example.com">
         </div>
 
-        <!-- Row 2 -->
         <div class="col-4">
           <label class="field-label">Mobile Number <span class="muted">*</span> <small style="font-weight:500">(10-digit)</small></label>
           <input id="client_contact_number" class="input" type="text" inputmode="numeric" pattern="\d{10}" placeholder="10 digits" required>
@@ -105,7 +103,6 @@
           </div>
         </div>
 
-        <!-- Row 3 -->
         <div class="col-6">
           <label class="field-label">Client Address <span class="muted">(optional)</span></label>
           <input id="client_address" class="input" type="text" placeholder="Street, locality, landmark (optional)">
@@ -149,10 +146,8 @@
           <input id="remarks" class="input" type="text" placeholder="Notes or follow-up details (optional)">
         </div>
 
-        <!-- Hidden country code fixed to +91 -->
         <input type="hidden" id="country_code" value="+91">
 
-        <!-- GPS fields -->
         <div class="col-3">
           <label class="field-label">Latitude <span class="muted">*</span></label>
           <input id="latitude" class="input" type="text" readonly required>
@@ -183,17 +178,17 @@
     </section>
   </main>
 
-  <!-- success modal -->
   <div id="successModal">
     <div class="panel">
-      <h3>✅ Data Saved Successfully!</h3>
-      <p>Your entries were sent to the configured webhook.</p>
+      <h3>✅ Data Sent Successfully!</h3>
+      <p>Your entries were sent to the configured webhook via JSON POST.</p>
       <div style="margin-top:12px"><button class="btn primary" onclick="closeModal()">OK</button></div>
     </div>
   </div>
 
 <script>
-const WEBHOOK_URL = "https://n8n.srv1063334.hstgr.cloud/webhook-test/Real-Estate-Daily-Sales-Calls-Report";
+// Use the original URL for the webhook
+const WEBHOOK_URL = "https://n8n.srv1063334.hstgr.cloud/webhook-test/Real-Estate-Daily-Sales-Calls-Report"; 
 
 /* India states & cities (compact) */
 const indiaStates = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Puducherry"];
@@ -275,11 +270,18 @@ function addRow(d){
   tr.querySelector('.removeBtn').addEventListener('click', ()=>{ tr.remove(); entries = entries.filter(x=>x.id!==d.id); });
 }
 
-/* submit all */
+/* submit all - Back to Fetch with CORS assumption */
 document.getElementById('submitAll').addEventListener('click', async ()=>{
   if(entries.length===0){ alert('Please add at least one entry'); return; }
   try{
-    const res = await fetch(WEBHOOK_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entries) });
+    const res = await fetch(WEBHOOK_URL, { 
+        method:'POST', 
+        // This header is essential for sending JSON to the webhook
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify(entries) 
+    });
+    
+    // Check if the response was successful (HTTP status 200-299)
     if(res.ok){
       document.getElementById('successModal').style.display='flex';
       entries = [];
@@ -287,10 +289,13 @@ document.getElementById('submitAll').addEventListener('click', async ()=>{
       setTimeout(()=>{ document.getElementById('successModal').style.display='none'; }, 1800);
     } else {
       const txt = await res.text().catch(()=>null);
-      alert('Submission failed: ' + (txt||res.statusText));
+      // Alert on a non-successful HTTP status
+      alert('Submission failed. Server returned HTTP status: ' + res.status + '. Response: ' + (txt||res.statusText));
     }
   }catch(err){
-    alert('Error submitting: ' + (err.message||err));
+    // This block catches network errors (like the original CORS error).
+    // If this alert shows up, double-check that CORS is fully enabled on your n8n webhook.
+    alert('Error submitting data. Check your network connection and ensure CORS is enabled on the n8n webhook.');
   }
 });
 
