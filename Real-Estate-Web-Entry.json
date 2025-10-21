@@ -1,0 +1,20 @@
+{
+  "name": "Real Estate Web Entry",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "real-estate-sales-entry",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    }
+  ]
+}

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Real Estate Daily Sales & Calls</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Typography & spacing per spec:
+     Title: 22-24px, Labels:14-16px, Inputs:12-14px, line-height:1.5 */
+  :root{
+    --title-size:24px;
+    --label-size:15px;
+    --input-size:14px;
+    --line-height:1.5;
+    --accent:#ff7a00;
+    --blue:#1565C0;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial; background:linear-gradient(135deg,#f9f9f9 0%,#efefef 100%); color:#222; -webkit-font-smoothing:antialiased;}
+  header{background:url('assets/header.jpg') center/cover no-repeat, linear-gradient(180deg,#e8e8e8,#d8d8d8); height:82px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#1565C0; font-size:var(--title-size); border-bottom-left-radius:10px; border-bottom-right-radius:10px;}
+  .card{max-width:1120px;margin:20px auto;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.08);padding:20px 22px;position:relative}
+  .header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+  .form-title{font-size:22px;color:var(--blue);font-weight:600}
+  .note{font-size:12px;color:#666;text-align:right;line-height:1.4;max-width:360px}
+  /* Grid - landscape style */
+  form.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 14px;align-items:end}
+  label.field-label{display:block;font-size:var(--label-size);font-weight:500;margin-bottom:6px;color:#333}
+  .input{padding:10px;border-radius:8px;border:1px solid #d6dbe6;font-size:var(--input-size);background:#fff;width:100%;box-sizing:border-box}
+  .col-3{grid-column: span 3;}
+  .col-4{grid-column: span 4;}
+  .col-6{grid-column: span 6;}
+  .col-12{grid-column: span 12;}
+  .actions{display:flex;gap:12px;justify-content:flex-end;grid-column: span 12;margin-top:6px}
+  .btn{padding:10px 14px;border-radius:8px;border:none;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn.primary{background:linear-gradient(90deg,#1565C0,#1976D2);color:#fff}
+  .btn.accent{background:linear-gradient(90deg,#FBC02D,#FFA000);color:#111}
+  .btn.ghost{background:transparent;border:1px solid #ddd;color:#333}
+  .muted{color:#777;font-size:12px}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+  th,td{padding:8px 6px;border-bottom:1px solid #eee;text-align:left}
+  th{background:#f4f8ff;color:#0d47a1;position:sticky;top:0}
+  /* success modal */
+  #successModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;z-index:9999}
+  #successModal .panel{background:#fff;padding:20px;border-radius:10px;max-width:420px;text-align:center;box-shadow:0 6px 30px rgba(0,0,0,0.2)}
+  #successModal h3{color:#2e7d32;margin:0 0 8px}
+  @media(max-width:900px){
+    form.grid{grid-template-columns:repeat(6,1fr);}
+    .col-3{grid-column:span 6}
+    .col-4{grid-column:span 6}
+    .col-6{grid-column:span 6}
+    .actions{justify-content:space-between}
+    .note{display:block;text-align:left;margin-top:10px}
+  }
+  .symbol{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-weight:700}
+  .input-with-symbol{position:relative}
+</style>
+</head>
+<body>
+  <header>🏡 Modern Villa — Daily Sales & Calls</header>
+  <main>
+    <section class="card" role="main" aria-labelledby="formTitle">
+      <div class="header-row">
+        <div>
+          <div id="formTitle" class="form-title">Real Estate Daily Sales & Calls Report</div>
+          <div class="muted" style="font-size:13px;margin-top:6px">Font: Inter (fallbacks: Open Sans, Lato, Roboto). Titles 22-24px; labels 14-16px; inputs 12-14px; line-height 1.4–1.6. Minimal bolding for clarity.</div>
+        </div>
+        <div class="note">* Required fields | Optional fields labeled | GPS (lat, lon) mandatory</div>
+      </div>
+
+      <form id="salesForm" class="grid" autocomplete="on" novalidate>
+        <!-- Row 1 -->
+        <div class="col-3">
+          <label class="field-label">Title <span class="muted">*</span></label>
+          <select id="title" class="input" required>
+            <option value="">Select</option><option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
+          </select>
+        </div>
+        <div class="col-3">
+          <label class="field-label">First Name <span class="muted">*</span></label>
+          <input id="first_name" class="input" type="text" required>
+        </div>
+        <div class="col-3">
+          <label class="field-label">Surname <span class="muted">*</span></label>
+          <input id="surname" class="input" type="text" required>
+        </div>
+        <div class="col-3">
+          <label class="field-label">Email <span class="muted">(optional)</span></label>
+          <input id="email" class="input" type="email" placeholder="client@example.com">
+        </div>
+
+        <!-- Row 2 -->
+        <div class="col-4">
+          <label class="field-label">Mobile Number <span class="muted">*</span> <small style="font-weight:500">(10-digit)</small></label>
+          <input id="client_contact_number" class="input" type="text" inputmode="numeric" pattern="\d{10}" placeholder="10 digits" required>
+        </div>
+        <div class="col-4">
+          <label class="field-label">Team Member <span class="muted">*</span></label>
+          <input id="team_member" class="input" type="text" required>
+        </div>
+        <div class="col-4">
+          <label class="field-label">Token / Booking Money <span class="muted">(optional)</span></label>
+          <div class="input-with-symbol">
+            <span class="symbol">₹</span>
+            <input id="token_money" class="input" type="number" min="0" style="padding-left:36px">
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="col-6">
+          <label class="field-label">Client Address <span class="muted">(optional)</span></label>
+          <input id="client_address" class="input" type="text" placeholder="Street, locality, landmark (optional)">
+        </div>
+        <div class="col-3" id="stateField">
+          <label class="field-label">State (India) <span class="muted">(optional)</span></label>
+          <select id="state" class="input"><option value="">Select state</option></select>
+        </div>
+        <div class="col-3" id="cityField">
+          <label class="field-label">City (India) <span class="muted">(optional)</span></label>
+          <input id="city" class="input" type="text" placeholder="Start typing city name">
+        </div>
+
+        <div class="col-3">
+          <label class="field-label">Calls Made <span class="muted">*</span></label>
+          <input id="calls" class="input" type="number" min="0" value="1" required>
+        </div>
+        <div class="col-3">
+          <label class="field-label">Meetings Held <span class="muted">*</span></label>
+          <input id="meetings" class="input" type="number" min="0" value="0" required>
+        </div>
+        <div class="col-3">
+          <label class="field-label">Leads Generated <span class="muted">*</span></label>
+          <input id="leads_generated" class="input" type="number" min="0" value="0" required>
+        </div>
+        <div class="col-3">
+          <label class="field-label">Sales Closed <span class="muted">*</span></label>
+          <input id="sales_closed" class="input" type="number" min="0" value="0" required>
+        </div>
+
+        <div class="col-6">
+          <label class="field-label">Revenue <span class="muted">*</span></label>
+          <div class="input-with-symbol">
+            <span class="symbol">₹</span>
+            <input id="revenue" class="input" type="number" min="0" value="0" style="padding-left:36px" required>
+          </div>
+        </div>
+
+        <div class="col-6">
+          <label class="field-label">Remarks <span class="muted">(optional)</span></label>
+          <input id="remarks" class="input" type="text" placeholder="Notes or follow-up details (optional)">
+        </div>
+
+        <!-- Hidden country code fixed to +91 -->
+        <input type="hidden" id="country_code" value="+91">
+
+        <!-- GPS fields -->
+        <div class="col-3">
+          <label class="field-label">Latitude <span class="muted">*</span></label>
+          <input id="latitude" class="input" type="text" readonly required>
+        </div>
+        <div class="col-3">
+          <label class="field-label">Longitude <span class="muted">*</span></label>
+          <input id="longitude" class="input" type="text" readonly required>
+        </div>
+
+        <div class="actions col-12">
+          <button type="button" class="btn ghost" id="getLocation">📍 Get Location</button>
+          <button type="button" class="btn primary" id="addEntry"><span id="tickIcon">+ Add Entry</span></button>
+          <button type="button" class="btn accent" id="submitAll">Submit All</button>
+        </div>
+      </form>
+
+      <div style="overflow-x:auto;margin-top:12px">
+        <table id="entriesTable" aria-live="polite">
+          <thead>
+            <tr>
+              <th>Title</th><th>First</th><th>Surname</th><th>Email</th><th>Mobile</th><th>Team</th><th>Calls</th><th>Meetings</th><th>Leads</th><th>Sales</th><th>Revenue</th><th>Token</th><th>Lat</th><th>Lon</th><th>City</th><th>State</th><th>UID</th><th>Remarks</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- success modal -->
+  <div id="successModal">
+    <div class="panel">
+      <h3>✅ Data Saved Successfully!</h3>
+      <p>Your entries were sent to the configured webhook.</p>
+      <div style="margin-top:12px"><button class="btn primary" onclick="closeModal()">OK</button></div>
+    </div>
+  </div>
+
+<script>
+const WEBHOOK_URL = "https://n8n.srv1063334.hstgr.cloud/webhook/real-estate-sales-entry";
+
+/* India states & cities (compact) */
+const indiaStates = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Puducherry"];
+const indianCities = ["Mumbai","Delhi","Bengaluru","Hyderabad","Ahmedabad","Chennai","Kolkata","Pune","Surat","Jaipur","Lucknow","Kanpur","Nagpur","Indore","Thane","Bhopal","Visakhapatnam","Patna","Vadodara","Ghaziabad","Ludhiana","Agra","Nashik","Faridabad","Meerut","Rajkot"];
+
+/* populate states */
+const stateSelect = document.getElementById('state');
+indiaStates.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.text = s; stateSelect.appendChild(opt); });
+
+let entries = [];
+function generateUUID(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16);}); }
+function nowDateTime(){ const n=new Date(); return {date:n.toISOString().split('T')[0], time:n.toTimeString().split(' ')[0]}; }
+
+/* get location */
+document.getElementById('getLocation').addEventListener('click', ()=>{
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(p=>{
+      document.getElementById('latitude').value = p.coords.latitude.toFixed(6);
+      document.getElementById('longitude').value = p.coords.longitude.toFixed(6);
+    }, err=>{ alert('Unable to fetch location: ' + (err.message||err)); }, {enableHighAccuracy:true, timeout:10000});
+  } else alert('Geolocation not supported');
+});
+
+/* add entry */
+document.getElementById('addEntry').addEventListener('click', ()=>{
+  // basic validation
+  const title = document.getElementById('title').value.trim();
+  const first = document.getElementById('first_name').value.trim();
+  const surname = document.getElementById('surname').value.trim();
+  const mobile = document.getElementById('client_contact_number').value.trim();
+  const team = document.getElementById('team_member').value.trim();
+  const calls = Number(document.getElementById('calls').value||0);
+  const meetings = Number(document.getElementById('meetings').value||0);
+  const leads = Number(document.getElementById('leads_generated').value||0);
+  const sales = Number(document.getElementById('sales_closed').value||0);
+  const revenue = Number(document.getElementById('revenue').value||0);
+  const token = Number(document.getElementById('token_money').value||0);
+  const lat = document.getElementById('latitude').value.trim();
+  const lon = document.getElementById('longitude').value.trim();
+  if(!title||!first||!surname||!mobile||!team){ alert('Please fill required fields'); return; }
+  if(!/^\d{10}$/.test(mobile)){ alert('Mobile must be 10 digits'); return; }
+  if(!lat||!lon){ alert('Please capture GPS location'); return; }
+
+  const entry = {
+    id: generateUUID(),
+    title, first_name:first, surname, email:document.getElementById('email').value.trim(),
+    country_code: document.getElementById('country_code').value,
+    client_contact_number: mobile, team_member: team, calls, meetings, leads_generated:leads, sales_closed:sales,
+    revenue, token_money: token, client_address: document.getElementById('client_address').value.trim(),
+    state: document.getElementById('state').value, city: document.getElementById('city').value.trim(),
+    latitude: lat, longitude: lon, remarks: document.getElementById('remarks').value.trim(),
+    date: nowDateTime().date, time: nowDateTime().time
+  };
+  entries.push(entry);
+  addRow(entry);
+  // green tick animation
+  const tick = document.getElementById('tickIcon');
+  tick.textContent = '✓ Added';
+  setTimeout(()=>{ tick.textContent = '+ Add Entry'; }, 1000);
+  // reset form except location
+  document.getElementById('title').value=''; document.getElementById('first_name').value=''; document.getElementById('surname').value='';
+  document.getElementById('email').value=''; document.getElementById('client_contact_number').value=''; document.getElementById('team_member').value='';
+  document.getElementById('calls').value='1'; document.getElementById('meetings').value='0'; document.getElementById('leads_generated').value='0';
+  document.getElementById('sales_closed').value='0'; document.getElementById('revenue').value='0'; document.getElementById('token_money').value='';
+  document.getElementById('client_address').value=''; document.getElementById('state').value=''; document.getElementById('city').value=''; document.getElementById('remarks').value='';
+});
+
+/* addRow to table */
+function addRow(d){
+  const tbody = document.querySelector('#entriesTable tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${escapeHtml(d.title)}</td><td>${escapeHtml(d.first_name)}</td><td>${escapeHtml(d.surname)}</td>
+    <td>${escapeHtml(d.email)}</td><td>${escapeHtml(d.client_contact_number)}</td><td>${escapeHtml(d.team_member)}</td>
+    <td>${escapeHtml(d.calls)}</td><td>${escapeHtml(d.meetings)}</td><td>${escapeHtml(d.leads_generated)}</td><td>${escapeHtml(d.sales_closed)}</td>
+    <td>₹ ${escapeHtml(d.revenue)}</td><td>₹ ${escapeHtml(d.token_money)}</td><td>${escapeHtml(d.latitude)}</td><td>${escapeHtml(d.longitude)}</td>
+    <td>${escapeHtml(d.city)}</td><td>${escapeHtml(d.state)}</td><td>${escapeHtml(d.id)}</td><td>${escapeHtml(d.remarks)}</td>
+    <td><button class="removeBtn" type="button">Remove</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelector('.removeBtn').addEventListener('click', ()=>{ tr.remove(); entries = entries.filter(x=>x.id!==d.id); });
+}
+
+/* submit all */
+document.getElementById('submitAll').addEventListener('click', async ()=>{
+  if(entries.length===0){ alert('Please add at least one entry'); return; }
+  try{
+    const res = await fetch(WEBHOOK_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entries) });
+    if(res.ok){
+      document.getElementById('successModal').style.display='flex';
+      entries = [];
+      document.querySelector('#entriesTable tbody').innerHTML = '';
+      setTimeout(()=>{ document.getElementById('successModal').style.display='none'; }, 1800);
+    } else {
+      const txt = await res.text().catch(()=>null);
+      alert('Submission failed: ' + (txt||res.statusText));
+    }
+  }catch(err){
+    alert('Error submitting: ' + (err.message||err));
+  }
+});
+
+function closeModal(){ document.getElementById('successModal').style.display='none'; }
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+</script>
+</body>
+</html>
